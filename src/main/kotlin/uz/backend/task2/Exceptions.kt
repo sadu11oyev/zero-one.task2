@@ -67,3 +67,14 @@ class NotCancelOrderException():Task2ExceptionHandler(){
         return ErrorCodes.NOT_CANCEL_ORDER
     }
 }
+class NotAdminException():Task2ExceptionHandler(){
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.NOT_ADMIN_EXCEPTION
+    }
+}
+
+class CancelledOrderException():Task2ExceptionHandler(){
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.CANCELLED_ORDER_EXCEPTION
+    }
+}

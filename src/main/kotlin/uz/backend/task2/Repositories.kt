@@ -110,7 +110,7 @@ interface OrderItemRepository: JpaRepository<OrderItem, Long>{
 @Repository
 interface OrderRepository: BaseRepository<Order>{
     @Query("""
-        select o from orders o where o.user.id= :userId
+        select o from orders o where o.user.id= :userId and o.status!='CANCELLED'
     """)
     fun findAllByUserId(userId: Long): List<Order>
 

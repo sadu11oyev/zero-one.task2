@@ -9,7 +9,9 @@ enum class ErrorCodes(val code: Int){
     PRODUCT_ALREADY_EXIST(301),
     PRODUCT_LACK_OF(302),
     NOT_CANCEL_ORDER(303),
-    ORDER_NOT_FOUND(304)
+    ORDER_NOT_FOUND(304),
+    NOT_ADMIN_EXCEPTION(305),
+    CANCELLED_ORDER_EXCEPTION(306)
 
 }
 enum class UserRole{

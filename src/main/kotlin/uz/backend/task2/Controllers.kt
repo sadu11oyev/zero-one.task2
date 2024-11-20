@@ -105,4 +105,12 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
         @PostMapping
         fun create(@RequestBody request: PaymentCreateReq) = service.create(request)
     }
+
+    @RestController
+    @RequestMapping("/api/v1/admin")
+    class AdminController(val service: AdminService){
+
+        @PostMapping("{adminId}/{orderId}")
+        fun updateOrder(@PathVariable adminId:Long, @PathVariable orderId:Long) = service.updateOrder(adminId,orderId)
+    }
 }

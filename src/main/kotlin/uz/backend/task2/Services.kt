@@ -43,7 +43,9 @@ interface OrderService {
 interface PaymentService{
     fun create(request: PaymentCreateReq)
     fun getAll(userId: Long): List<PaymentResponse>
-
+}
+interface AdminService {
+    fun updateOrder(adminId: Long, orderId: Long): String
 }
 
 
@@ -267,7 +269,8 @@ class OrderServiceImpl(
         val order = repository.findByIdAndUserId(userId,id)?: throw OrderNotFoundException()
         if (order.status.equals(OrderStatus.PENDING)){
             orderItemRepository.deleteByOrderId(id)
-            repository.delete(order)
+            order.status = OrderStatus.CANCELLED
+            repository.save(order)
         }else{
             throw  NotCancelOrderException()
         }
@@ -291,6 +294,30 @@ class PaymentServiceImpl(
     override fun getAll(userId: Long): List<PaymentResponse> {
         userRepository.findByIdAndDeletedFalse(userId)?:throw UserNotFoundException()
         return repository.findAllByUserId(userId).map { payment ->PaymentResponse.toResponse(payment) }
+    }
+}
+
+@Service
+class AdminServiceImpl(
+    private val userRepository: UserRepository,
+    private val orderRepository: OrderRepository
+):AdminService {
+
+    override fun updateOrder(adminId: Long, orderId: Long):String {
+        val user = userRepository.findByIdAndDeletedFalse(adminId)?:throw UserNotFoundException()
+        if (!user.role.equals(UserRole.ADMIN)){
+            throw NotAdminException()
+        }
+        val order = orderRepository.findById(orderId).get()
+        when (order.status) {
+            OrderStatus.PENDING -> order.status=OrderStatus.DELIVERED
+            OrderStatus.DELIVERED -> order.status=OrderStatus.FINISHED
+            OrderStatus.FINISHED -> println("Order finished")
+            OrderStatus.CANCELLED -> throw CancelledOrderException()
+        }
+        orderRepository.save(order)
+        return "Order status: "+ order.status
+
     }
 }
 
