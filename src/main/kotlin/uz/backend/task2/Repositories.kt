@@ -71,14 +71,6 @@ interface CategoryRepository: BaseRepository<Category>{
         and c.deleted=false
     """)
     fun findByName(id: Long, name: String): Category
-
-    @Modifying
-    @Query("""
-    UPDATE product p
-    SET p.deleted = false
-    WHERE p.category.id = :categoryId
-    """)
-    fun updateProductDeleted(categoryId: Long)
 }
 
 @Repository
@@ -93,10 +85,45 @@ interface ProductRepository: BaseRepository<Product>{
     fun findByName(id: Long, name: String): Category
 
     @Query("""
-        select p.count - COALESCE(sum(tri.count), 0) from product p 
-         left join transaction_item tri on p.id=tri.product.id 
+        select p.stockCount - COALESCE(sum(oi.quantity), 0) from product p 
+         left join order_item oi on p.id=oi.product.id 
          where p.id= :id
-         GROUP BY p.id, p.count
+         GROUP BY p.id, p.stockCount
     """)
     fun getAllCount(id: Long): Long
+}
+@Repository
+interface OrderItemRepository: JpaRepository<OrderItem, Long>{
+
+    @Query("""
+        select oi from order_item oi where oi.order.id= :orderId
+    """)
+    fun findAllByOrderId(orderId: Long,pageable: Pageable):Page<OrderItem>
+
+    @Modifying
+    @Query("""
+        DELETE order_item oi WHERE oi.order.id = :id
+    """)
+    fun deleteByOrderId(id:Long)
+
+}
+@Repository
+interface OrderRepository: BaseRepository<Order>{
+    @Query("""
+        select o from orders o where o.user.id= :userId
+    """)
+    fun findAllByUserId(userId: Long): List<Order>
+
+    @Query("""
+        select o from orders o where o.user.id=: userId and o.id= :id
+    """)
+    fun findByIdAndUserId(userId: Long, id: Long): Order
+}
+@Repository
+interface PaymentRepository: BaseRepository<Payment>{
+    @Query("""
+        select p from payment p where p.user.id= :userId
+    """)
+    fun findAllByUserId(userId: Long): List<Payment>
+
 }

@@ -3,7 +3,7 @@ package uz.backend.task2
 import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.context.support.ResourceBundleMessageSource
 
-sealed class Task1ExceptionHandler: RuntimeException(){
+sealed class Task2ExceptionHandler: RuntimeException(){
     abstract fun errorCode(): ErrorCodes
     open  fun getAllArguments(): Array<Any>? = null
 
@@ -19,45 +19,51 @@ sealed class Task1ExceptionHandler: RuntimeException(){
     }
 }
 
-class UserAllReadyExistException:Task1ExceptionHandler(){
+class UserAllReadyExistException:Task2ExceptionHandler(){
     override fun errorCode(): ErrorCodes {
         return ErrorCodes.USER_ALREADY_EXIST
     }
 }
-class UserNotFoundException:Task1ExceptionHandler(){
+class UserNotFoundException:Task2ExceptionHandler(){
     override fun errorCode(): ErrorCodes {
         return ErrorCodes.USER_NOT_FOUND
     }
 }
-class CategoryAllReadyExistException:Task1ExceptionHandler(){
+class CategoryAllReadyExistException:Task2ExceptionHandler(){
     override fun errorCode(): ErrorCodes {
         return ErrorCodes.CATEGORY_ALREADY_EXIST
     }
 }
-class CategoryNotFoundException:Task1ExceptionHandler(){
+class CategoryNotFoundException:Task2ExceptionHandler(){
     override fun errorCode(): ErrorCodes {
         return ErrorCodes.CATEGORY_NOT_FOUNT
     }
 }
-class ProductAllReadyExistException:Task1ExceptionHandler(){
+class ProductAllReadyExistException:Task2ExceptionHandler(){
     override fun errorCode(): ErrorCodes {
         return ErrorCodes.PRODUCT_ALREADY_EXIST
     }
 }
-class ProductNotFoundException:Task1ExceptionHandler(){
+class ProductNotFoundException:Task2ExceptionHandler(){
     override fun errorCode(): ErrorCodes {
         return ErrorCodes.PRODUCT_NOT_FOUNT
     }
 }
 
-class ProductLackOfException:Task1ExceptionHandler() {
+class ProductLackOfException:Task2ExceptionHandler() {
     override fun errorCode(): ErrorCodes {
         return ErrorCodes.PRODUCT_LACK_OF
     }
 }
 
-class InsufficientFundsException: Task1ExceptionHandler(){
+class OrderNotFoundException():Task2ExceptionHandler(){
     override fun errorCode(): ErrorCodes {
-        return ErrorCodes.INSUFFICIENT_FUNDS
+        return ErrorCodes.ORDER_NOT_FOUND
+    }
+}
+
+class NotCancelOrderException():Task2ExceptionHandler(){
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.NOT_CANCEL_ORDER
     }
 }

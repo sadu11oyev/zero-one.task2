@@ -8,7 +8,8 @@ enum class ErrorCodes(val code: Int){
     PRODUCT_NOT_FOUNT(300),
     PRODUCT_ALREADY_EXIST(301),
     PRODUCT_LACK_OF(302),
-    INSUFFICIENT_FUNDS(303)
+    NOT_CANCEL_ORDER(303),
+    ORDER_NOT_FOUND(304)
 
 }
 enum class UserRole{

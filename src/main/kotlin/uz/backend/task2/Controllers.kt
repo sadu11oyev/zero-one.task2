@@ -2,6 +2,7 @@ package uz.backend.task2
 
 import jakarta.validation.Valid
 import org.springframework.context.support.ResourceBundleMessageSource
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -10,8 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 @ControllerAdvice
 class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSource) {
 
-    @ExceptionHandler(Task1ExceptionHandler::class)
-    fun handleAccountException(exception: Task1ExceptionHandler): ResponseEntity<BaseMessage> {
+    @ExceptionHandler(Task2ExceptionHandler::class)
+    fun handleAccountException(exception: Task2ExceptionHandler): ResponseEntity<BaseMessage> {
         return  ResponseEntity.badRequest().body(exception.getErrorMessage(errorMessageSource))
     }
 
@@ -69,5 +70,39 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
 
         @DeleteMapping("{id}")
         fun delete(@PathVariable id: Long) = service.delete(id)
+    }
+
+    @RestController
+    @RequestMapping("/api/v1/order")
+    class OrderController(val service: OrderService){
+        @GetMapping("{userId}")
+        fun getAll(@PathVariable userId: Long) = service.getAll(userId)
+
+        @GetMapping("{userId}/{id}")
+        fun getOne(@PathVariable userId: Long, @PathVariable id:Long) = service.getOne(userId,id)
+
+        @DeleteMapping("cancel/{userId}/{id}")
+        fun cancelOrder(@PathVariable userId: Long, @PathVariable id:Long) = service.cancelOrder(userId,id)
+
+    }
+    @RestController
+    @RequestMapping("/api/v1/orderItem")
+    class OrderItemController(val service: OrderItemService){
+        @PostMapping("{userId}")
+        fun getAll(@PathVariable userId: Long, @RequestBody request: OrderItemCreateReq) = service.create(userId,request)
+
+        @GetMapping("{userId}")
+        fun getOne(@PathVariable userId: Long,pageable: Pageable) = service.getOrderItem(userId,pageable)
+
+    }
+
+    @RestController
+    @RequestMapping("/api/v1/payment")
+    class PaymentController(val service: PaymentService){
+        @GetMapping("{userId}")
+        fun getAll(@PathVariable userId: Long) = service.getAll(userId)
+
+        @PostMapping
+        fun create(@RequestBody request: PaymentCreateReq) = service.create(request)
     }
 }

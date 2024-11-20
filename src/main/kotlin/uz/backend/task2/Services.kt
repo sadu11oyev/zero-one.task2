@@ -4,6 +4,8 @@ import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.LocalDate
 
 interface UserService {
     fun create(request: UserCreateRequest)
@@ -25,6 +27,23 @@ interface ProductService {
     fun getOne(id: Long): ProductResponse
     fun update(id: Long, request: ProductUpdateRequest)
     fun delete(id: Long)
+}
+
+interface OrderItemService{
+    fun create(userId: Long,request: OrderItemCreateReq)
+    fun getOrderItem(orderId: Long, pageable: Pageable): Page<OrderItemResponse>
+}
+interface OrderService {
+    fun getAll(userId: Long): List<OrderResponse>
+    fun getOne(userId:Long, id:Long): OrderResponse
+    fun cancelOrder(userId:Long, id:Long)
+
+}
+
+interface PaymentService{
+    fun create(request: PaymentCreateReq)
+    fun getAll(userId: Long): List<PaymentResponse>
+
 }
 
 
@@ -181,3 +200,98 @@ class ProductServiceImpl(
         repository.trash(id) ?: throw ProductNotFoundException()
     }
 }
+@Service
+class OrderItemServiceImpl(
+    private val repository: OrderItemRepository,
+    private val orderRepository: OrderRepository,
+    private val productRepository: ProductRepository,
+    private val userRepository: UserRepository
+) : OrderItemService{
+    override fun create(userId: Long, request: OrderItemCreateReq) {
+        val user = userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
+        var totalAmount = 0.0
+
+        for(item in request.items){
+            val product = productRepository.findByIdAndDeletedFalse(item.productId)?:throw ProductNotFoundException()
+            val stockCount = productRepository.getAllCount(item.productId)
+            if (stockCount < item.quantity) {
+                throw ProductLackOfException()
+            }
+            val prTotalAmount = (item.quantity) * product.price
+            totalAmount  += prTotalAmount
+        }
+
+
+        val order = Order(user,totalAmount,OrderStatus.PENDING )
+        orderRepository.save(order)
+
+        val orderItemList = mutableListOf<OrderItem>()
+        for(item in request.items){
+            val product = productRepository.findByIdAndDeletedFalse(item.productId)?:throw ProductNotFoundException()
+            val prTotalAmount = item.quantity * product.price
+            val orderItem=OrderItem(order,product,item.quantity,product.price,prTotalAmount)
+            orderItemList.add(orderItem)
+        }
+        repository.saveAll(orderItemList)
+    }
+
+    override fun getOrderItem(orderId: Long, pageable: Pageable): Page<OrderItemResponse> {
+        orderRepository.findById(orderId)
+            .orElseThrow { OrderNotFoundException() }
+        return repository.findAllByOrderId(orderId,pageable).map {
+            OrderItemResponse.toResponse(it)
+        }
+    }
+}
+
+@Service
+class OrderServiceImpl(
+    private val repository: OrderRepository,
+    private val userRepository: UserRepository,
+    private val orderItemRepository: OrderItemRepository
+):OrderService{
+    override fun getAll(userId: Long): List<OrderResponse> {
+        userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
+        return repository.findAllByUserId(userId).map { order->OrderResponse.toResponse(order) }
+    }
+
+    override fun getOne(userId: Long, id: Long): OrderResponse {
+        userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
+        val order = repository.findByIdAndUserId(userId,id)?: throw OrderNotFoundException()
+        return OrderResponse.toResponse(order)
+    }
+
+    @Transactional
+    override fun cancelOrder(userId: Long, id: Long) {
+        userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
+        val order = repository.findByIdAndUserId(userId,id)?: throw OrderNotFoundException()
+        if (order.status.equals(OrderStatus.PENDING)){
+            orderItemRepository.deleteByOrderId(id)
+            repository.delete(order)
+        }else{
+            throw  NotCancelOrderException()
+        }
+    }
+}
+
+@Service
+class PaymentServiceImpl(
+    private val repository: PaymentRepository,
+    private val userRepository: UserRepository,
+    private val orderRepository: OrderRepository
+): PaymentService {
+    override fun create(request: PaymentCreateReq) {
+        request.run {
+            val user = userRepository.findByIdAndDeletedFalse(userId)?:throw UserNotFoundException()
+            val order = orderRepository.findByIdAndUserId(userId,orderId)?: throw OrderNotFoundException()
+            repository.save(this.toEntity(user,order))
+        }
+    }
+
+    override fun getAll(userId: Long): List<PaymentResponse> {
+        userRepository.findByIdAndDeletedFalse(userId)?:throw UserNotFoundException()
+        return repository.findAllByUserId(userId).map { payment ->PaymentResponse.toResponse(payment) }
+    }
+}
+
+
