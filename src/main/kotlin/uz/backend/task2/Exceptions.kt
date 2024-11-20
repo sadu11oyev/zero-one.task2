@@ -29,3 +29,35 @@ class UserNotFoundException:Task1ExceptionHandler(){
         return ErrorCodes.USER_NOT_FOUND
     }
 }
+class CategoryAllReadyExistException:Task1ExceptionHandler(){
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.CATEGORY_ALREADY_EXIST
+    }
+}
+class CategoryNotFoundException:Task1ExceptionHandler(){
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.CATEGORY_NOT_FOUNT
+    }
+}
+class ProductAllReadyExistException:Task1ExceptionHandler(){
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.PRODUCT_ALREADY_EXIST
+    }
+}
+class ProductNotFoundException:Task1ExceptionHandler(){
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.PRODUCT_NOT_FOUNT
+    }
+}
+
+class ProductLackOfException:Task1ExceptionHandler() {
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.PRODUCT_LACK_OF
+    }
+}
+
+class InsufficientFundsException: Task1ExceptionHandler(){
+    override fun errorCode(): ErrorCodes {
+        return ErrorCodes.INSUFFICIENT_FUNDS
+    }
+}

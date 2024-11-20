@@ -4,14 +4,13 @@ import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener::class)
 class BaseEntity(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long? = null,
-    @CreatedDate @Column(updatable = false, nullable = false)  val createdAt: LocalDateTime?=null,
+    @CreatedDate @Column(nullable = false)  val createdAt: LocalDateTime?=null,
     @Column(nullable = false) @ColumnDefault(value = "false") var deleted: Boolean = false
 )
 
@@ -19,7 +18,8 @@ class BaseEntity(
 class User(
     @Column(nullable = false, unique = true) var username: String,
     @Column(nullable = false) var fullName: String,
-    @Column var balance: BigDecimal,
+    @Column var email: String,
+    @Column var address: String,
     @Enumerated(EnumType.STRING) var role: UserRole,
 ):BaseEntity()
 

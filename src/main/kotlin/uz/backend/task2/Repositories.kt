@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.jpa.repository.support.JpaEntityInformation
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository
@@ -59,4 +60,43 @@ interface UserRepository: BaseRepository<User>{
             and u.deleted=false
     """)
     fun findByUsername(id: Long, username: String): User?
+}
+@Repository
+interface CategoryRepository: BaseRepository<Category>{
+    fun findByNameAndDeletedFalse(name: String)
+    @Query("""
+        select c from category c 
+        where c.id!= :id
+        and c.name= :name
+        and c.deleted=false
+    """)
+    fun findByName(id: Long, name: String): Category
+
+    @Modifying
+    @Query("""
+    UPDATE product p
+    SET p.deleted = false
+    WHERE p.category.id = :categoryId
+    """)
+    fun updateProductDeleted(categoryId: Long)
+}
+
+@Repository
+interface ProductRepository: BaseRepository<Product>{
+    fun findByNameAndDeletedFalse(name: String)
+    @Query("""
+        select p from product p 
+        where p.id!= :id
+        and p.name= :name
+        and p.deleted=false
+    """)
+    fun findByName(id: Long, name: String): Category
+
+    @Query("""
+        select p.count - COALESCE(sum(tri.count), 0) from product p 
+         left join transaction_item tri on p.id=tri.product.id 
+         where p.id= :id
+         GROUP BY p.id, p.count
+    """)
+    fun getAllCount(id: Long): Long
 }
