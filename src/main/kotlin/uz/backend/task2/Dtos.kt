@@ -123,7 +123,7 @@ data class ItemList(
     val productId: Long,
     var quantity:Double,
 )
-class OrderItemResponse(
+data class OrderItemResponse(
     val id: Long,
     val orderId: Long,
     val productName: String,
@@ -141,7 +141,7 @@ class OrderItemResponse(
     }
 }
 
-class OrderResponse(
+data class OrderResponse(
     val id:Long,
     val userName: String,
     val totalAmount: Double,
@@ -157,7 +157,7 @@ class OrderResponse(
     }
 }
 
-class PaymentCreateReq(
+data class PaymentCreateReq(
     val userId: Long,
     val orderId: Long,
     val amount: Double,
@@ -168,7 +168,7 @@ class PaymentCreateReq(
         return Payment(order,user,paymentMethod,amount,paymentStatus)
     }
 }
-class PaymentResponse(
+data class PaymentResponse(
     val userName: String,
     val orderId: Long,
     val amount: Double,
@@ -184,3 +184,14 @@ class PaymentResponse(
         }
     }
 }
+
+data class OrderStatisticsRes(
+    val userName: String,
+    val count: Int,
+    val totalAmount: Double
+)
+
+data class ProductStatistics(
+    val productName: String,
+    val countUsers: Int
+)

@@ -1,6 +1,7 @@
 package uz.backend.task2
 
 import jakarta.persistence.*
+import org.hibernate.annotations.Check
 import org.hibernate.annotations.ColumnDefault
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
@@ -42,6 +43,7 @@ class Product(
 class Order(
     @ManyToOne var user: User,
     @Column var totalAmount: Double,
+    @Column @Check(constraints = "status in ('PENDING', 'DELIVERED', 'FINISHED', 'CANCELLED')")
     @Enumerated(EnumType.STRING) var status: OrderStatus,
 ):BaseEntity()
 
@@ -56,9 +58,10 @@ class OrderItem(
 
 @Entity(name = "payment")
 class Payment(
-    @OneToOne val order: Order,
+    @ManyToOne val order: Order,
     @ManyToOne val user: User,
+    @Column(name = "payment_method")
     @Enumerated(EnumType.STRING) var paymentMethod: PaymentMethod,
     @Column val amount: Double,
-    @Enumerated(EnumType.STRING) var paymentStatus: PaymentStatus,
+    @Column(name = "payment_status") @Enumerated(EnumType.STRING)var paymentStatus: PaymentStatus,
 ):BaseEntity()

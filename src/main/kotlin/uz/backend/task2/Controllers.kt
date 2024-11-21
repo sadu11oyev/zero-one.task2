@@ -1,8 +1,8 @@
 package uz.backend.task2
 
 import jakarta.validation.Valid
+import org.hibernate.annotations.Parameter
 import org.springframework.context.support.ResourceBundleMessageSource
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -91,11 +91,10 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
         @PostMapping("{userId}")
         fun getAll(@PathVariable userId: Long, @RequestBody request: OrderItemCreateReq) = service.create(userId,request)
 
-        @GetMapping("{userId}")
-        fun getOne(@PathVariable userId: Long,pageable: Pageable) = service.getOrderItem(userId,pageable)
+        @GetMapping("{orderId}")
+        fun getOne(@PathVariable orderId: Long,pageable: Pageable) = service.getOrderItem(orderId,pageable)
 
     }
-
     @RestController
     @RequestMapping("/api/v1/payment")
     class PaymentController(val service: PaymentService){
@@ -112,5 +111,41 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
 
         @PostMapping("{adminId}/{orderId}")
         fun updateOrder(@PathVariable adminId:Long, @PathVariable orderId:Long) = service.updateOrder(adminId,orderId)
+    }
+
+
+    @RestController
+    @RequestMapping("/api/v1/statistics")
+    class StatisticsController(val orderItemService: OrderItemService,
+                               val orderService: OrderService){
+
+        @GetMapping("1/{userId}")
+        fun getUserOrderItems(@PathVariable userId: Long,pageable: Pageable) = orderItemService.getUserOrders(userId,pageable)
+
+        @GetMapping("3/{userId}/{date}")
+        fun getUserOrderStatistics(@PathVariable userId: Long,
+                                   @PathVariable date: String ): OrderStatisticsRes {
+            match(date)
+            return orderService.getUserOrderStatistics(userId,date)
+        }
+
+        @GetMapping("4/{userId}/{startDate}/{endDate}")
+        fun getUserOrderStatistics4(@PathVariable userId: Long,
+                                    @PathVariable startDate: String,
+                                    @PathVariable endDate: String ){
+            match(startDate)
+            match(endDate)
+            return orderItemService.getUserOrderStatistics4(userId,startDate,endDate)
+        }
+
+        @GetMapping("5/}")
+        fun productStatistics(@RequestBody productName: String) = orderItemService.getProductStatistics(productName)
+
+        private fun match(date: String) {
+            if (!date.matches(Regex("\\d{4}\\.\\d{2}"))) {
+                throw IllegalArgumentException("Date must be in format YYYY.MM (e.g., 2024.01)")
+            }
+        }
+
     }
 }

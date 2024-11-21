@@ -26,5 +26,5 @@ enum class PaymentMethod {
 }
 
 enum class PaymentStatus{
-    
+    SUCCESS, UN_SUCCESS
 }

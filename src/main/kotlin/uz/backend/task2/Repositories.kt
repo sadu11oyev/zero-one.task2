@@ -14,6 +14,8 @@ import org.springframework.data.jpa.repository.support.SimpleJpaRepository
 import org.springframework.data.repository.NoRepositoryBean
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
+import java.util.*
 
 @NoRepositoryBean
 interface BaseRepository<T: BaseEntity>: JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
@@ -75,6 +77,11 @@ interface CategoryRepository: BaseRepository<Category>{
 
 @Repository
 interface ProductRepository: BaseRepository<Product>{
+
+    @Query("""
+        select p from product p where p.name= :name
+    """)
+    fun findByName(name:String):Optional<Product>
     fun findByNameAndDeletedFalse(name: String)
     @Query("""
         select p from product p 
@@ -82,7 +89,7 @@ interface ProductRepository: BaseRepository<Product>{
         and p.name= :name
         and p.deleted=false
     """)
-    fun findByName(id: Long, name: String): Category
+    fun findByName(id: Long, name: String): Product
 
     @Query("""
         select p.stockCount - COALESCE(sum(oi.quantity), 0) from product p 
@@ -106,21 +113,48 @@ interface OrderItemRepository: JpaRepository<OrderItem, Long>{
     """)
     fun deleteByOrderId(id:Long)
 
+    @Query("""
+        select oi from order_item oi 
+        join orders o on oi.order.id=oi.id
+        join users u on o.user.id = u.id
+        where u.id= : userId
+    """)
+    fun findAllByUserId(userId: Long, pageable: Pageable) : Page<OrderItem>
+
+    @Query("""
+        select
+            oi.product.name as productName, 
+            count(o.user.username) as  countUser
+        from order_item oi
+        join orders o on oi.order.id = o.id
+        where oi.product.id= :id
+        group by oi.product.name, o.user.username
+    """)
+    fun getProductStatistics(id: Long): ProductStatistics
+
 }
 @Repository
-interface OrderRepository: BaseRepository<Order>{
+interface OrderRepository: JpaRepository<Order, Long>{
     @Query("""
         select o from orders o where o.user.id= :userId and o.status!='CANCELLED'
     """)
     fun findAllByUserId(userId: Long): List<Order>
-
     @Query("""
-        select o from orders o where o.user.id=: userId and o.id= :id
+        select o.user.username 
+            as userName,
+            count(o) as count,
+            sum(o.totalAmount) as totalAmount
+        from orders o
+            where
+                o.user.id = :userId
+            and 
+                o.createdAt BETWEEN :startDate AND :endDate
+            and o.status='FINISHED'
     """)
-    fun findByIdAndUserId(userId: Long, id: Long): Order
+    fun getStatistics(userId: Long, startDate: LocalDate, endDate: LocalDate): OrderStatisticsRes
 }
 @Repository
-interface PaymentRepository: BaseRepository<Payment>{
+interface PaymentRepository: JpaRepository<Payment, Long>{
     @Query("""
         select p from payment p where p.user.id= :userId
     """)

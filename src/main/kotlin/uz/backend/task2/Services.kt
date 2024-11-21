@@ -4,8 +4,9 @@ import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 interface UserService {
     fun create(request: UserCreateRequest)
@@ -32,11 +33,15 @@ interface ProductService {
 interface OrderItemService{
     fun create(userId: Long,request: OrderItemCreateReq)
     fun getOrderItem(orderId: Long, pageable: Pageable): Page<OrderItemResponse>
+    fun getUserOrders(userId: Long, pageable: Pageable):Page<OrderItemResponse>
+    fun getProductStatistics(productName:String ): ProductStatistics
+    fun getUserOrderStatistics4(userId: Long,startDate: String,endDate: String)
 }
 interface OrderService {
     fun getAll(userId: Long): List<OrderResponse>
     fun getOne(userId:Long, id:Long): OrderResponse
     fun cancelOrder(userId:Long, id:Long)
+    fun getUserOrderStatistics(userId:Long,date:String): OrderStatisticsRes
 
 }
 
@@ -244,6 +249,23 @@ class OrderItemServiceImpl(
             OrderItemResponse.toResponse(it)
         }
     }
+
+    override fun getUserOrders(userId: Long, pageable: Pageable): Page<OrderItemResponse> {
+        userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
+       return repository.findAllByUserId(userId,pageable).map {  OrderItemResponse.toResponse(it) }
+    }
+
+    override fun getProductStatistics(productName: String): ProductStatistics {
+        val opt = productRepository.findByName(productName)
+        if (opt.isEmpty){
+            throw ProductNotFoundException()
+        }
+        return repository.getProductStatistics(opt.get().id!!)
+    }
+
+    override fun getUserOrderStatistics4(userId: Long, startDate: String, endDate: String) {
+        TODO("Not yet implemented")
+    }
 }
 
 @Service
@@ -259,21 +281,31 @@ class OrderServiceImpl(
 
     override fun getOne(userId: Long, id: Long): OrderResponse {
         userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
-        val order = repository.findByIdAndUserId(userId,id)?: throw OrderNotFoundException()
-        return OrderResponse.toResponse(order)
+        val opt = repository.findById(id)
+        if(opt.isEmpty){ throw OrderNotFoundException()}
+        return OrderResponse.toResponse(opt.get())
     }
 
     @Transactional
     override fun cancelOrder(userId: Long, id: Long) {
         userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
-        val order = repository.findByIdAndUserId(userId,id)?: throw OrderNotFoundException()
-        if (order.status.equals(OrderStatus.PENDING)){
+        val opt = repository.findById(id)
+        if(opt.isEmpty){ throw OrderNotFoundException()}
+
+        if (opt.get().status == OrderStatus.PENDING){
             orderItemRepository.deleteByOrderId(id)
-            order.status = OrderStatus.CANCELLED
-            repository.save(order)
+            opt.get().status = OrderStatus.CANCELLED
+            repository.save(opt.get())
         }else{
             throw  NotCancelOrderException()
         }
+    }
+
+    override fun getUserOrderStatistics(userId: Long, date: String): OrderStatisticsRes {
+        userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
+        val firstDate = getFirstDate(date)
+        val lastDate = getLastDate(date)
+        return repository.getStatistics(userId,firstDate,lastDate)
     }
 }
 
@@ -286,8 +318,9 @@ class PaymentServiceImpl(
     override fun create(request: PaymentCreateReq) {
         request.run {
             val user = userRepository.findByIdAndDeletedFalse(userId)?:throw UserNotFoundException()
-            val order = orderRepository.findByIdAndUserId(userId,orderId)?: throw OrderNotFoundException()
-            repository.save(this.toEntity(user,order))
+            val opt = orderRepository.findById(orderId)
+            if(opt.isEmpty){ throw OrderNotFoundException()}
+            repository.save(this.toEntity(user,opt.get()))
         }
     }
 
@@ -305,19 +338,43 @@ class AdminServiceImpl(
 
     override fun updateOrder(adminId: Long, orderId: Long):String {
         val user = userRepository.findByIdAndDeletedFalse(adminId)?:throw UserNotFoundException()
-        if (!user.role.equals(UserRole.ADMIN)){
+        if (user.role != UserRole.ADMIN){
             throw NotAdminException()
         }
         val order = orderRepository.findById(orderId).get()
+        var boolean = false
         when (order.status) {
-            OrderStatus.PENDING -> order.status=OrderStatus.DELIVERED
-            OrderStatus.DELIVERED -> order.status=OrderStatus.FINISHED
+            OrderStatus.PENDING -> {
+                order.status=OrderStatus.DELIVERED
+                boolean=true
+            }
+            OrderStatus.DELIVERED -> {
+                order.status=OrderStatus.FINISHED
+                boolean=true
+            }
             OrderStatus.FINISHED -> println("Order finished")
             OrderStatus.CANCELLED -> throw CancelledOrderException()
         }
-        orderRepository.save(order)
+        if(boolean){ orderRepository.save(order)}
         return "Order status: "+ order.status
+    }
+}
 
+private fun getFirstDate(date: String): LocalDate {
+    try {
+        val yearMonth = YearMonth.parse(date, DateTimeFormatter.ofPattern("yyyy.MM"))
+        return yearMonth.atDay(1)
+    } catch (e: Exception) {
+        throw IllegalArgumentException(e)
+    }
+}
+
+private fun getLastDate(date: String): LocalDate {
+    try {
+        val yearMonth = YearMonth.parse(date, DateTimeFormatter.ofPattern("yyyy.MM"))
+        return yearMonth.atEndOfMonth()
+    } catch (e: Exception) {
+        throw IllegalArgumentException(e)
     }
 }
 
