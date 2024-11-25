@@ -1,9 +1,6 @@
 package uz.backend.task2
 
-import jakarta.persistence.Column
-import jakarta.persistence.ManyToOne
 import jakarta.validation.constraints.Size
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 data class BaseMessage(val code: Int, val message: String?)
@@ -194,4 +191,10 @@ data class OrderStatisticsRes(
 data class ProductStatistics(
     val productName: String,
     val countUsers: Int
+)
+data class UserOrderStatisticsRes(
+    val productName: String,
+    val totalQuantity: Double,
+    val orderCount: Long,
+    val totalAmount: Double
 )

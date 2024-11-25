@@ -35,7 +35,7 @@ interface OrderItemService{
     fun getOrderItem(orderId: Long, pageable: Pageable): Page<OrderItemResponse>
     fun getUserOrders(userId: Long, pageable: Pageable):Page<OrderItemResponse>
     fun getProductStatistics(productName:String ): ProductStatistics
-    fun getUserOrderStatistics4(userId: Long,startDate: String,endDate: String)
+    fun getUserOrderStatistics4(userId: Long,startDate: String,endDate: String):List<UserOrderStatisticsRes>
 }
 interface OrderService {
     fun getAll(userId: Long): List<OrderResponse>
@@ -252,7 +252,7 @@ class OrderItemServiceImpl(
 
     override fun getUserOrders(userId: Long, pageable: Pageable): Page<OrderItemResponse> {
         userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
-       return repository.findAllByUserId(userId,pageable).map {  OrderItemResponse.toResponse(it) }
+        return repository.findAllByUserId(userId,pageable).map {  OrderItemResponse.toResponse(it) }
     }
 
     override fun getProductStatistics(productName: String): ProductStatistics {
@@ -263,8 +263,13 @@ class OrderItemServiceImpl(
         return repository.getProductStatistics(opt.get().id!!)
     }
 
-    override fun getUserOrderStatistics4(userId: Long, startDate: String, endDate: String) {
-        TODO("Not yet implemented")
+    override fun getUserOrderStatistics4(userId: Long, startDate: String, endDate: String): List<UserOrderStatisticsRes> {
+        userRepository.findByIdAndDeletedFalse(userId)?: throw UserNotFoundException()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val startLocalDate = LocalDate.parse(startDate, formatter)
+        val endLocalDate = LocalDate.parse(endDate, formatter)
+        return repository.findUserOrderStatistics(userId,startLocalDate,endLocalDate)
+
     }
 }
 

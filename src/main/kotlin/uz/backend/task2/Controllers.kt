@@ -132,9 +132,7 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
         @GetMapping("4/{userId}/{startDate}/{endDate}")
         fun getUserOrderStatistics4(@PathVariable userId: Long,
                                     @PathVariable startDate: String,
-                                    @PathVariable endDate: String ){
-            match(startDate)
-            match(endDate)
+                                    @PathVariable endDate: String ): List<UserOrderStatisticsRes> {
             return orderItemService.getUserOrderStatistics4(userId,startDate,endDate)
         }
 

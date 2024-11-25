@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.support.JpaEntityInformation
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository
 import org.springframework.data.repository.NoRepositoryBean
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.util.*
@@ -131,6 +132,27 @@ interface OrderItemRepository: JpaRepository<OrderItem, Long>{
         group by oi.product.name, o.user.username
     """)
     fun getProductStatistics(id: Long): ProductStatistics
+
+    @Query("""
+        SELECT new uz.backend.task2.UserOrderStatisticsRes(
+            p.name,
+            SUM(oi.quantity),
+            COUNT(oi.id),
+            SUM(oi.totalPrice)
+        )
+        FROM order_item oi
+        JOIN oi.product p
+        JOIN oi.order o
+        WHERE o.user.id = :userId
+        AND o.createdAt BETWEEN :startDate AND :endDate
+        GROUP BY p.name
+        ORDER BY SUM(oi.totalPrice) DESC
+    """)
+    fun findUserOrderStatistics(
+        @Param("userId") userId: Long,
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate
+    ): List<UserOrderStatisticsRes>
 
 }
 @Repository
