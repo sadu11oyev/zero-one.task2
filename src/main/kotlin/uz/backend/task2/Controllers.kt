@@ -22,14 +22,14 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
         @PostMapping("create")
         fun create(@RequestBody @Valid request: UserCreateRequest) = service.create(request)
 
-        @GetMapping
+        @GetMapping("getAll")
         fun getAll(pageable: Pageable) = service.getAll(pageable)
 
 
-        @GetMapping("{id}")
+        @GetMapping("getOne/{id}")
         fun getOne(@PathVariable id: Long) = service.getOne(id)
 
-        @PostMapping("{id}")
+        @PutMapping("{id}")
         fun update(@PathVariable id: Long, @RequestBody request: UserUpdateRequest) = service.update(id, request)
 
         @DeleteMapping("{id}")
@@ -42,13 +42,13 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
         @PostMapping("create")
         fun create(@RequestBody @Valid request: CategoryCreateRequest) = service.create(request)
 
-        @GetMapping
+        @GetMapping("getAll")
         fun getAll(pageable: Pageable) = service.getAll(pageable)
 
-        @GetMapping("{id}")
+        @GetMapping("getOne/{id}")
         fun getOne(@PathVariable id: Long) = service.getOne(id)
 
-        @PostMapping("{id}")
+        @PutMapping("{id}")
         fun update(@PathVariable id: Long, @RequestBody request: CategoryUpdateRequest) = service.update(id, request)
 
     }
@@ -59,13 +59,13 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
         @PostMapping("create")
         fun create(@RequestBody @Valid request: ProductCreateRequest) = service.create(request)
 
-        @GetMapping
+        @GetMapping("getAll")
         fun getAll(pageable: Pageable) = service.getAll(pageable)
 
-        @GetMapping("{id}")
+        @GetMapping("getOne/{id}")
         fun getOne(@PathVariable id: Long) = service.getOne(id)
 
-        @PostMapping("{id}")
+        @PutMapping("{id}")
         fun update(@PathVariable id: Long, @RequestBody request: ProductUpdateRequest) = service.update(id, request)
 
         @DeleteMapping("{id}")
@@ -75,10 +75,10 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
     @RestController
     @RequestMapping("/api/v1/order")
     class OrderController(val service: OrderService){
-        @GetMapping("{userId}")
+        @GetMapping("getAll/{userId}")
         fun getAll(@PathVariable userId: Long) = service.getAll(userId)
 
-        @GetMapping("{userId}/{id}")
+        @GetMapping("getOne/{userId}/{id}")
         fun getOne(@PathVariable userId: Long, @PathVariable id:Long) = service.getOne(userId,id)
 
         @DeleteMapping("cancel/{userId}/{id}")
@@ -109,7 +109,7 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
     @RequestMapping("/api/v1/admin")
     class AdminController(val service: AdminService){
 
-        @PostMapping("{adminId}/{orderId}")
+        @PutMapping("{adminId}/{orderId}")
         fun updateOrder(@PathVariable adminId:Long, @PathVariable orderId:Long) = service.updateOrder(adminId,orderId)
     }
 
