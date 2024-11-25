@@ -138,7 +138,7 @@ class ExceptionHandler(private val errorMessageSource: ResourceBundleMessageSour
             return orderItemService.getUserOrderStatistics4(userId,startDate,endDate)
         }
 
-        @GetMapping("5/}")
+        @GetMapping("5")
         fun productStatistics(@RequestBody productName: String) = orderItemService.getProductStatistics(productName)
 
         private fun match(date: String) {
