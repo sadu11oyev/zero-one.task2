@@ -110,7 +110,10 @@ class CategoryServiceImpl(
 ) : CategoryService {
     override fun create(request: CategoryCreateRequest) {
         request.run {
-            repository.findByNameAndDeletedFalse(name)?:throw CategoryAllReadyExistException()
+            val category = repository.findByNameAndDeletedFalse(name)
+            if (category!=null){
+                throw CategoryAllReadyExistException()
+            }
             repository.save(this.toEntity())
         }
     }
@@ -149,7 +152,10 @@ class ProductServiceImpl(
 ) : ProductService {
     override fun create(request: ProductCreateRequest) {
         request.run {
-            repository.findByNameAndDeletedFalse(name)?:throw ProductAllReadyExistException()
+            val product = repository.findByNameAndDeletedFalse(name)
+            if (product!=null){
+                throw ProductAllReadyExistException()
+            }
             val category = categoryRepository.findByIdAndDeletedFalse(categoryId)?:throw CategoryNotFoundException()
             repository.save(this.toEntity(category))
         }
