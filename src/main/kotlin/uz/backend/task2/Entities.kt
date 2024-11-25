@@ -11,9 +11,16 @@ import java.time.LocalDateTime
 @EntityListeners(AuditingEntityListener::class)
 class BaseEntity(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long? = null,
-    @CreatedDate @Column(nullable = false)  val createdAt: LocalDateTime?=null,
-    @Column(nullable = false) @ColumnDefault(value = "false") var deleted: Boolean = false
-)
+    @CreatedDate @Column(nullable = false, updatable = false) var createdAt: LocalDateTime? = null,
+    @Column(nullable = false) var deleted: Boolean = false
+){
+    @PrePersist
+    fun prePersist() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now()
+        }
+    }
+}
 
 @Entity(name = "users")
 class User(
