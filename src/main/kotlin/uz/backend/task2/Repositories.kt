@@ -66,14 +66,14 @@ interface UserRepository: BaseRepository<User>{
 }
 @Repository
 interface CategoryRepository: BaseRepository<Category>{
-    fun findByNameAndDeletedFalse(name: String)
+    fun findByNameAndDeletedFalse(name: String): Category?
     @Query("""
         select c from category c 
         where c.id!= :id
         and c.name= :name
         and c.deleted=false
     """)
-    fun findByName(id: Long, name: String): Category
+    fun findByName(id: Long, name: String): Category?
 }
 
 @Repository
@@ -82,15 +82,15 @@ interface ProductRepository: BaseRepository<Product>{
     @Query("""
         select p from product p where p.name= :name
     """)
-    fun findByName(name:String):Optional<Product>
-    fun findByNameAndDeletedFalse(name: String)
+    fun findByName(name:String):Product?
+    fun findByNameAndDeletedFalse(name: String): Product?
     @Query("""
         select p from product p 
         where p.id!= :id
         and p.name= :name
         and p.deleted=false
     """)
-    fun findByName(id: Long, name: String): Product
+    fun findByName(id: Long, name: String): Product?
 
     @Query("""
         select p.stockCount - COALESCE(sum(oi.quantity), 0) from product p 

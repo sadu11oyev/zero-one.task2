@@ -21,7 +21,6 @@ interface CategoryService {
     fun getOne(id: Long): CategoryResponse
     fun update(id: Long, request: CategoryUpdateRequest)
 }
-
 interface ProductService {
     fun create(request: ProductCreateRequest)
     fun getAll(pageable: Pageable): Page<ProductResponse>
@@ -29,7 +28,6 @@ interface ProductService {
     fun update(id: Long, request: ProductUpdateRequest)
     fun delete(id: Long)
 }
-
 interface OrderItemService{
     fun create(userId: Long,request: OrderItemCreateReq)
     fun getOrderItem(orderId: Long, pageable: Pageable): Page<OrderItemResponse>
@@ -44,7 +42,6 @@ interface OrderService {
     fun getUserOrderStatistics(userId:Long,date:String): OrderStatisticsRes
 
 }
-
 interface PaymentService{
     fun create(request: PaymentCreateReq)
     fun getAll(userId: Long): List<PaymentResponse>
@@ -113,10 +110,7 @@ class CategoryServiceImpl(
 ) : CategoryService {
     override fun create(request: CategoryCreateRequest) {
         request.run {
-            val category = repository.findByNameAndDeletedFalse(name)
-            if (category != null) {
-                throw CategoryAllReadyExistException()
-            }
+            repository.findByNameAndDeletedFalse(name)?:throw CategoryAllReadyExistException()
             repository.save(this.toEntity())
         }
     }
@@ -138,10 +132,7 @@ class CategoryServiceImpl(
 
         request.run {
             name?.let {
-                val nameDeletedFalse = repository.findByName(id, it)
-                if (nameDeletedFalse != null) {
-                    throw CategoryAllReadyExistException()
-                }
+                repository.findByName(id, it)?:throw throw CategoryAllReadyExistException()
                 category.name = it
             }
             name?.let { category.name = it }
@@ -158,10 +149,7 @@ class ProductServiceImpl(
 ) : ProductService {
     override fun create(request: ProductCreateRequest) {
         request.run {
-            val product = repository.findByNameAndDeletedFalse(name)
-            if (product != null) {
-                throw ProductAllReadyExistException()
-            }
+            repository.findByNameAndDeletedFalse(name)?:throw ProductAllReadyExistException()
             val category = categoryRepository.findByIdAndDeletedFalse(categoryId)?:throw CategoryNotFoundException()
             repository.save(this.toEntity(category))
         }
@@ -256,11 +244,8 @@ class OrderItemServiceImpl(
     }
 
     override fun getProductStatistics(productName: String): ProductStatistics {
-        val opt = productRepository.findByName(productName)
-        if (opt.isEmpty){
-            throw ProductNotFoundException()
-        }
-        return repository.getProductStatistics(opt.get().id!!)
+        val product = productRepository.findByName(productName)?:throw ProductNotFoundException()
+        return repository.getProductStatistics(product.id!!)
     }
 
     override fun getUserOrderStatistics4(userId: Long, startDate: String, endDate: String): List<UserOrderStatisticsRes> {
